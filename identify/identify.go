@@ -94,6 +94,18 @@ func (i *Identifier) NextItem(fn func(byte) bool) (string, error) {
 	return s.String(), nil
 }
 
+func (i *Identifier) PeakCharN(n int) (string, error) {
+	s := strings.Builder{}
+	for j := 0; j < n; j++ {
+		c, err := i.PeakChar()
+		if err != nil {
+			return "", err
+		}
+		s.WriteByte(c)
+	}
+	return s.String(), nil
+}
+
 func (i *Identifier) NextToken() (*Token, error) {
 	if err := i.EatWhiteSpace(); err != nil {
 		return nil, err
@@ -124,9 +136,9 @@ func (i *Identifier) NextToken() (*Token, error) {
 		newWord := string(i.ch) + string(c)
 		if k := LookupKeywords(newWord); k != "" {
 			_ = i.ReadChar()
-			return NewTokenString(k, newWord), nil
+			t = NewTokenString(k, newWord)
 		}
-		return NewToken(OPBang, i.ch), nil
+		t = NewToken(OPBang, i.ch)
 	case i.ch == '=':
 		c, err := i.PeakChar()
 		if err != nil {
@@ -135,9 +147,9 @@ func (i *Identifier) NextToken() (*Token, error) {
 		newWord := string(i.ch) + string(c)
 		if k := LookupKeywords(newWord); k != "" {
 			_ = i.ReadChar()
-			return NewTokenString(k, newWord), nil
+			t = NewTokenString(k, newWord)
 		}
-		return NewToken(OPAssign, i.ch), nil
+		t = NewToken(OPAssign, i.ch)
 	default:
 		if k := LookupKeywords(string(i.ch)); k != "" {
 			t = NewToken(k, i.ch)
