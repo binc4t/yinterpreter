@@ -24,9 +24,12 @@ func main() {
 
 	for {
 		t, err := idy.NextToken()
-		if err != nil {
-			log.Fatal(err)
+		if t != nil {
+			fmt.Printf("%+v\n", t)
 		}
-		fmt.Printf("%+v\n", t)
+		if err != nil {
+			fmt.Printf("\n%s\n", err.Error())
+			return
+		}
 	}
 }
