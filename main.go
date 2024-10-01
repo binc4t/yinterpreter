@@ -17,19 +17,10 @@ func main() {
 		log.Fatal(err)
 	}
 	idy := identify.NewIdentifier(f)
-	err = idy.FillIn()
-	if err != nil {
-		log.Fatal(err)
-	}
 
-	for {
-		t, err := idy.NextToken()
-		if t != nil {
+	for idy.FillIn() {
+		for t := idy.NextToken(); t.Type != identify.EOF; t = idy.NextToken() {
 			fmt.Printf("%+v\n", t)
-		}
-		if err != nil {
-			fmt.Printf("\n%s\n", err.Error())
-			return
 		}
 	}
 }

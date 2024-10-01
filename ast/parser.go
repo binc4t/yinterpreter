@@ -19,7 +19,7 @@ type Parser struct {
 	i *identify.Identifier
 
 	curNode  *identify.Token
-	peakNode *identify.Token
+	peekNode *identify.Token
 }
 
 func NewParser(i *identify.Identifier) *Parser {
@@ -31,8 +31,8 @@ func NewParser(i *identify.Identifier) *Parser {
 }
 
 func (p *Parser) nextNode() {
-	p.curNode = p.peakNode
-	p.peakNode, _ = p.i.NextToken()
+	p.curNode = p.peekNode
+	p.peekNode, _ = p.i.NextToken()
 }
 
 func (p *Parser) ParseProgram() *Program {

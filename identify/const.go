@@ -11,6 +11,7 @@ const (
 	FALSE    = "FALSE"
 	FOR      = "FOR"
 	RETURN   = "RETURN"
+	EOF      = "EOF"
 
 	OPAssign   = "="
 	OPPlus     = "+"
