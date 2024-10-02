@@ -18,6 +18,36 @@ type Expression interface {
 
 type LetStatement struct {
 	Token *identify.Token
-	Left  Statement
-	Right Statement
+	Left  *IdentExpression
+	Right *NormalExpression
+}
+
+func (s *LetStatement) TokenRaw() string {
+	return s.Token.Raw
+}
+
+func (s *LetStatement) statementNode() {
+
+}
+
+type IdentExpression struct {
+	Token *identify.Token
+}
+
+func (s *IdentExpression) TokenRaw() string {
+	return s.Token.Raw
+}
+
+func (s *IdentExpression) expressionNode() {
+}
+
+type NormalExpression struct {
+	Token *identify.Token
+}
+
+func (s *NormalExpression) TokenRaw() string {
+	return s.Token.Raw
+}
+
+func (s *NormalExpression) expressionNode() {
 }
