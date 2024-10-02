@@ -1,8 +1,8 @@
 package identify
 
 import (
+	"bufio"
 	"bytes"
-	"errors"
 	"io"
 	"strings"
 )
@@ -21,10 +21,9 @@ func NewTokenString(tokenType string, rawString string) *Token {
 }
 
 type Identifier struct {
-	r          io.Reader
-	charReader io.Reader
-	buf        []byte
-	peakBuf    *bytes.Buffer
+	r       io.Reader
+	scanner *bufio.Scanner
+	buf     *bytes.Buffer
 
 	size int  // size of the valid buf
 	ch   byte // current char
@@ -32,133 +31,113 @@ type Identifier struct {
 }
 
 func NewIdentifier(r io.Reader) *Identifier {
+	raw := make([]byte, 0, 1024)
 	i := &Identifier{
-		r:          r,
-		charReader: io.LimitReader(r, 1),
-		buf:        make([]byte, 1024), // default size
-		peakBuf:    new(bytes.Buffer),
+		r:       r,
+		scanner: bufio.NewScanner(r),
+		buf:     bytes.NewBuffer(raw),
 	}
 	return i
 }
 
-func (i *Identifier) FillIn() error {
-	n, err := io.ReadFull(i.r, i.buf)
-	if err != nil && errors.Is(err, io.EOF) {
-		return err
+func (i *Identifier) FillIn() bool {
+	if !i.scanner.Scan() {
+		return false
 	}
-	i.ch = i.buf[0]
+	i.buf.Reset()
+	i.buf.WriteString(i.scanner.Text())
+	if i.buf.Len() != 0 {
+		i.ch = i.buf.Bytes()[0]
+	} else {
+		i.ch = 0
+	}
 	i.pos = 1
-	i.size = n
-	i.peakBuf.Reset()
-	return nil
+	i.size = i.buf.Len()
+	return true
 }
 
-func (i *Identifier) ReadChar() error {
+func (i *Identifier) ReadChar() {
 	if i.pos >= i.size {
-		err := i.FillIn()
-		if err != nil {
-			return err
-		}
+		i.ch = 0
+	} else {
+		i.ch = i.buf.Bytes()[i.pos]
 	}
-	i.ch = i.buf[i.pos]
 	i.pos++
-	return nil
 }
 
-func (i *Identifier) PeakChar() (byte, error) {
+func (i *Identifier) PeekChar() byte {
 	if i.pos >= i.size {
-		n, err := io.Copy(i.peakBuf, i.charReader)
-		if err != nil {
-			return 0, err
-		}
-		if n != 1 {
-			return 0, errors.New("PeakChar n is not 1")
-		}
+		return 0
 	}
-	return i.buf[i.pos], nil
+	return i.buf.Bytes()[i.pos]
 }
 
-func (i *Identifier) EatWhiteSpace() error {
-	_, err := i.NextItem(isWhiteSpace)
-	return err
+func (i *Identifier) EatWhiteSpace() {
+	_ = i.NextItem(isWhiteSpace)
 }
 
-func (i *Identifier) NextItem(fn func(byte) bool) (string, error) {
+func (i *Identifier) NextItem(fn func(byte) bool) string {
 	s := strings.Builder{}
 	for fn(i.ch) {
 		s.WriteByte(i.ch)
-		if err := i.ReadChar(); err != nil {
-			return s.String(), err
-		}
+		i.ReadChar()
 	}
-	return s.String(), nil
+	return s.String()
 }
 
-func (i *Identifier) PeakCharN(n int) (string, error) {
+func (i *Identifier) PeekCharN(n int) string {
 	s := strings.Builder{}
 	for j := 0; j < n; j++ {
-		c, err := i.PeakChar()
-		if err != nil {
-			return "", err
-		}
+		c := i.PeekChar()
 		s.WriteByte(c)
 	}
-	return s.String(), nil
+	return s.String()
 }
 
-func (i *Identifier) NextToken() (*Token, error) {
-	if err := i.EatWhiteSpace(); err != nil {
-		return nil, err
-	}
+func (i *Identifier) NextToken() *Token {
+	i.EatWhiteSpace()
 
 	var t *Token
 	switch {
 	case isIdentLetter(i.ch):
-		s, err := i.NextItem(isIdentLetter)
-		if err != nil {
-			return nil, err
-		}
+		s := i.NextItem(isIdentLetter)
 		if k := LookupKeywords(s); k != "" {
-			return NewTokenString(k, s), nil
+			return NewTokenString(k, s)
 		}
-		return NewTokenString(IDENT, s), nil
+		return NewTokenString(IDENT, s)
 	case isDigit(i.ch):
-		s, err := i.NextItem(isDigit)
-		if err != nil {
-			return nil, err
-		}
-		return NewTokenString(INT, s), nil
+		s := i.NextItem(isDigit)
+		return NewTokenString(INT, s)
 	case i.ch == '!':
-		c, err := i.PeakChar()
-		if err != nil {
-			return NewToken(OPBang, i.ch), nil
-		}
+		c := i.PeekChar()
 		newWord := string(i.ch) + string(c)
 		if k := LookupKeywords(newWord); k != "" {
-			_ = i.ReadChar()
+			i.ReadChar()
 			t = NewTokenString(k, newWord)
+		} else {
+			t = NewToken(OPBang, i.ch)
 		}
-		t = NewToken(OPBang, i.ch)
 	case i.ch == '=':
-		c, err := i.PeakChar()
-		if err != nil {
-			return NewToken(OPAssign, i.ch), nil
-		}
+		c := i.PeekChar()
 		newWord := string(i.ch) + string(c)
 		if k := LookupKeywords(newWord); k != "" {
-			_ = i.ReadChar()
+			i.ReadChar()
 			t = NewTokenString(k, newWord)
+		} else {
+			t = NewToken(OPAssign, i.ch)
 		}
-		t = NewToken(OPAssign, i.ch)
+	case i.ch == 0:
+		return NewToken(EOF, 0)
 	default:
 		if k := LookupKeywords(string(i.ch)); k != "" {
 			t = NewToken(k, i.ch)
+		} else {
+			t = NewToken(INVALID, i.ch)
 		}
-		t = NewToken(INVALID, i.ch)
 	}
 
-	err := i.ReadChar()
-	return t, err
+	i.ReadChar()
+	return t
 }
 
 func isIdentLetter(b byte) bool {
