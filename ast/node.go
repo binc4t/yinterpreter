@@ -20,7 +20,20 @@ type Expression interface {
 	expressionNode()
 }
 
+type baseStatement struct {
+}
+
+func (b *baseStatement) statementNode() {
+}
+
+type baseExpression struct {
+}
+
+func (b *baseExpression) expressionNode() {
+}
+
 type LetStatement struct {
+	baseStatement
 	Token *identify.Token
 	Left  *IdentExpression
 	Right *NormalExpression
@@ -30,11 +43,18 @@ func (s *LetStatement) TokenRaw() string {
 	return s.Token.Raw
 }
 
-func (s *LetStatement) statementNode() {
+type ReturnStatement struct {
+	baseStatement
+	Token *identify.Token
+	Exp   Expression
+}
 
+func (s *ReturnStatement) TokenRaw() string {
+	return s.Token.Raw
 }
 
 type IdentExpression struct {
+	baseExpression
 	Token *identify.Token
 }
 
@@ -42,10 +62,8 @@ func (s *IdentExpression) TokenRaw() string {
 	return s.Token.Raw
 }
 
-func (s *IdentExpression) expressionNode() {
-}
-
 type NormalExpression struct {
+	baseExpression
 	Tokens []*identify.Token
 }
 
@@ -55,7 +73,4 @@ func (s *NormalExpression) TokenRaw() string {
 		ret.WriteString(fmt.Sprintf("%v, ", t))
 	}
 	return ret.String()
-}
-
-func (s *NormalExpression) expressionNode() {
 }

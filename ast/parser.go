@@ -70,6 +70,8 @@ func (p *Parser) parseStatement() Statement {
 	switch p.curToken.Type {
 	case identify.LET:
 		return p.parseLetStatement()
+	case identify.RETURN:
+		return p.parseReturnStatement()
 	default:
 		return nil
 	}
@@ -96,6 +98,19 @@ func (p *Parser) parseLetStatement() *LetStatement {
 
 	s.Left = left
 	s.Right = right
+	return s
+}
+
+func (p *Parser) parseReturnStatement() *ReturnStatement {
+	s := &ReturnStatement{
+		Token: p.curToken,
+	}
+	p.nextToken()
+
+	if exp := p.parseNormalExpression(); exp != nil {
+		s.Exp = exp
+	}
+
 	return s
 }
 
