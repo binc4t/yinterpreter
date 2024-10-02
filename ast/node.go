@@ -54,7 +54,6 @@ func (s *NormalExpression) TokenRaw() string {
 	for _, t := range s.Tokens {
 		ret.WriteString(fmt.Sprintf("%v, ", t))
 	}
-	ret.WriteByte('\n')
 	return ret.String()
 }
 

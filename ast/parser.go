@@ -1,7 +1,9 @@
 package ast
 
 import (
+	"fmt"
 	"github.com/binc4t/yinterpreter/identify"
+	"github.com/binc4t/yinterpreter/libs"
 )
 
 type Program struct {
@@ -20,11 +22,13 @@ type Parser struct {
 
 	curToken  *identify.Token
 	peekToken *identify.Token
+	errors    []error
 }
 
 func NewParser(i *identify.Identifier) *Parser {
 	p := &Parser{
-		i: i,
+		i:      i,
+		errors: make([]error, 0),
 	}
 
 	// init curToken and peekToken
@@ -49,13 +53,17 @@ func (p *Parser) ParseProgram() *Program {
 		}
 
 		s := p.parseStatement()
-		if s != nil {
+		if !libs.IsNil(s) {
 			prog.Statements = append(prog.Statements, s)
 		}
 		p.nextToken()
 	}
 
 	return prog
+}
+
+func (p *Parser) Errors() []error {
+	return p.errors
 }
 
 func (p *Parser) parseStatement() Statement {
@@ -120,5 +128,10 @@ func (p *Parser) nextIfPeekTokenIs(tokenType string) bool {
 		p.nextToken()
 		return true
 	}
+	p.peekError(tokenType)
 	return false
+}
+
+func (p *Parser) peekError(tokenType string) {
+	p.errors = append(p.errors, fmt.Errorf("expect peek to be %s, but got %s", tokenType, p.peekToken.Type))
 }

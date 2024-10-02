@@ -27,6 +27,8 @@ func main() {
 				fmt.Println(s.TokenRaw(), l.Left.TokenRaw(), l.Right.TokenRaw())
 			}
 		}
+		fmt.Println("err: ", parser.Errors())
+
 		//for t := idy.NextToken(); t.Type != identify.EOF; t = idy.NextToken() {
 		//	fmt.Printf("%+v\n", t)
 		//}
