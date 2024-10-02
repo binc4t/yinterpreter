@@ -44,7 +44,7 @@ func (p *Parser) ParseProgram() *Program {
 	}
 
 	for {
-		if p.curToken == nil || p.curToken.Type == identify.EOF {
+		if p.curToken.Type == identify.EOF {
 			break
 		}
 
