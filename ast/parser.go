@@ -56,14 +56,6 @@ func (p *Parser) ParseProgram() *Program {
 	return prog
 }
 
-func (p *Parser) peekTokenIs(tokenType string) bool {
-	if p.peekToken != nil && p.peekToken.Type == tokenType {
-		p.nextToken()
-		return true
-	}
-	return false
-}
-
 func (p *Parser) parseStatement() Statement {
 	switch p.curToken.Type {
 	case identify.LET:
@@ -75,21 +67,22 @@ func (p *Parser) parseStatement() Statement {
 }
 
 func (p *Parser) parseLetStatement() *LetStatement {
-	if !p.peekTokenIs(identify.IDENT) {
-		return nil
-	}
-
 	s := &LetStatement{
 		Token: p.curToken,
 	}
 
+	if !p.nextIfPeekTokenIs(identify.IDENT) {
+		return nil
+	}
+
 	left := p.parseIdentExpression()
 
-	if !p.peekTokenIs(identify.OPAssign) {
+	if !p.nextIfPeekTokenIs(identify.OPAssign) {
 		return nil
 	}
 
 	right := p.parseNormalExpression()
+	p.nextToken()
 
 	s.Left = left
 	s.Right = right
@@ -101,7 +94,25 @@ func (p *Parser) parseIdentExpression() *IdentExpression {
 }
 
 func (p *Parser) parseNormalExpression() *NormalExpression {
+	ret := &NormalExpression{}
 	for ; p.curToken.Type != identify.Semicolon; p.nextToken() {
+		ret.Tokens = append(ret.Tokens, p.curToken)
 	}
-	return &NormalExpression{Token: p.curToken}
+	return ret
+}
+
+func (p *Parser) peekTokenIs(tokenType string) bool {
+	return p.peekToken.Type == tokenType
+}
+
+func (p *Parser) curTokenIs(tokenType string) bool {
+	return p.curToken.Type == tokenType
+}
+
+func (p *Parser) nextIfPeekTokenIs(tokenType string) bool {
+	if p.peekTokenIs(tokenType) {
+		p.nextToken()
+		return true
+	}
+	return false
 }

@@ -44,8 +44,13 @@ func (i *Identifier) FillIn() bool {
 	if !i.scanner.Scan() {
 		return false
 	}
+	i.buf.Reset()
 	i.buf.WriteString(i.scanner.Text())
-	i.ch = i.buf.Bytes()[0]
+	if i.buf.Len() != 0 {
+		i.ch = i.buf.Bytes()[0]
+	} else {
+		i.ch = 0
+	}
 	i.pos = 1
 	i.size = i.buf.Len()
 	return true

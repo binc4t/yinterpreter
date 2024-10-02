@@ -1,6 +1,10 @@
 package ast
 
-import "github.com/binc4t/yinterpreter/identify"
+import (
+	"fmt"
+	"github.com/binc4t/yinterpreter/identify"
+	"strings"
+)
 
 type Node interface {
 	TokenRaw() string
@@ -42,11 +46,16 @@ func (s *IdentExpression) expressionNode() {
 }
 
 type NormalExpression struct {
-	Token *identify.Token
+	Tokens []*identify.Token
 }
 
 func (s *NormalExpression) TokenRaw() string {
-	return s.Token.Raw
+	ret := strings.Builder{}
+	for _, t := range s.Tokens {
+		ret.WriteString(fmt.Sprintf("%v, ", t))
+	}
+	ret.WriteByte('\n')
+	return ret.String()
 }
 
 func (s *NormalExpression) expressionNode() {

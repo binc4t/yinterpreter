@@ -19,6 +19,11 @@ func main() {
 	idy := identify.NewIdentifier(f)
 
 	for idy.FillIn() {
+		//parser := ast.NewParser(idy)
+		//prog := parser.ParseProgram()
+		//for _, s := range prog.Statements {
+		//	fmt.Println(s.TokenRaw())
+		//}
 		for t := idy.NextToken(); t.Type != identify.EOF; t = idy.NextToken() {
 			fmt.Printf("%+v\n", t)
 		}
