@@ -49,8 +49,10 @@ func (p *Parser) ParseProgram() *Program {
 		}
 
 		s := p.parseStatement()
-		prog.Statements = append(prog.Statements, s)
-
+		if s != nil {
+			prog.Statements = append(prog.Statements, s)
+		}
+		p.nextToken()
 	}
 
 	return prog
@@ -61,9 +63,8 @@ func (p *Parser) parseStatement() Statement {
 	case identify.LET:
 		return p.parseLetStatement()
 	default:
+		return nil
 	}
-
-	return nil
 }
 
 func (p *Parser) parseLetStatement() *LetStatement {
@@ -80,6 +81,7 @@ func (p *Parser) parseLetStatement() *LetStatement {
 	if !p.nextIfPeekTokenIs(identify.OPAssign) {
 		return nil
 	}
+	p.nextToken()
 
 	right := p.parseNormalExpression()
 	p.nextToken()
@@ -95,8 +97,12 @@ func (p *Parser) parseIdentExpression() *IdentExpression {
 
 func (p *Parser) parseNormalExpression() *NormalExpression {
 	ret := &NormalExpression{}
-	for ; p.curToken.Type != identify.Semicolon; p.nextToken() {
+	for {
+		if p.curToken.Type == identify.EOF || p.curToken.Type == identify.Semicolon {
+			break
+		}
 		ret.Tokens = append(ret.Tokens, p.curToken)
+		p.nextToken()
 	}
 	return ret
 }
