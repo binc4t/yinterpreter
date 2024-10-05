@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/binc4t/yinterpreter/identify"
 	"github.com/binc4t/yinterpreter/libs"
+	"strings"
 )
 
 type Program struct {
@@ -15,6 +16,14 @@ func (p *Program) TokenRaw() string {
 		return p.Statements[0].TokenRaw()
 	}
 	return ""
+}
+
+func (p *Program) String() string {
+	b := strings.Builder{}
+	for _, s := range p.Statements {
+		b.WriteString(s.String())
+	}
+	return b.String()
 }
 
 type Parser struct {

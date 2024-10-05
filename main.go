@@ -22,15 +22,7 @@ func main() {
 	for idy.FillIn() {
 		parser := ast.NewParser(idy)
 		prog := parser.ParseProgram()
-		for _, s := range prog.Statements {
-			switch v := s.(type) {
-			case *ast.LetStatement:
-				fmt.Println(s.TokenRaw(), v.Left.TokenRaw(), v.Right.TokenRaw())
-			case *ast.ReturnStatement:
-				fmt.Println(s.TokenRaw(), v.Exp.TokenRaw())
-			}
-		}
-
+		fmt.Println(prog.String())
 		if len(parser.Errors()) != 0 {
 			fmt.Println("err: ", parser.Errors())
 		}
